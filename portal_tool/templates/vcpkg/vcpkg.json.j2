@@ -1,0 +1,21 @@
+{
+  "name": "{{ port.name }}",
+  "version": "{{ port.version }}",
+  "description": "{{ port.description }}",
+  "license": "{{ port.license }}",
+  "dependencies": [{% for dependency in port.dependencies %}
+    {
+      "name": "{{ dependency.name }}",{% if dependency.features %}
+      "features": [{% for feature in dependency.features %} "{{ feature }}"{% if not loop.last %},{% endif %} {% endfor %}],{% endif %}
+      "version>=": "{{ dependency.version }}"
+    },{% endfor %}
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

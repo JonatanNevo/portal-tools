@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+{% for dependency in module.dependencies %}find_dependency({{ dependency.name }})
+{% endfor %}
+include("${CMAKE_CURRENT_LIST_DIR}/{{ module.name }}-targets.cmake")
+
+check_required_components({{ module.name }})

@@ -1,0 +1,146 @@
+{
+    "repo": "JonatanNevo/portal-framework",
+    "vcpkg_registry_repo": "JonatanNevo/portal-vcpkg-registry",
+    "modules": [
+        {
+            "name": "portal-application",
+            "subdirectory": "application",
+            "description": "Application interface for the Portal framework",
+            "build_options": [
+                "PORTAL_FIND_PACAKGE=ON"
+            ],
+            "short_name": "application",
+            "dependencies": [
+                {
+                    "name": "portal-core",
+                    "version": "0.0.1",
+                    "features": [],
+                    "target": "portal::core"
+                }
+            ]
+        },
+        {
+            "name": "portal-core",
+            "subdirectory": "core",
+            "description": "The core of all portal framework components",
+            "build_options": [],
+            "short_name": "core",
+            "dependencies": [
+                {
+                    "name": "glm",
+                    "version": "1.0.1#3",
+                    "features": [],
+                    "target": "glm::glm"
+                },
+                {
+                    "name": "spdlog",
+                    "version": "1.15.0#1",
+                    "features": [],
+                    "target": "spdlog::spdlog"
+                }
+            ]
+        },
+        {
+            "name": "portal-gui",
+            "subdirectory": "gui",
+            "description": "Base gui application for the Portal framework.",
+            "build_options": [
+                "PORTAL_FIND_PACAKGE=ON"
+            ],
+            "short_name": "gui",
+            "dependencies": [
+                {
+                    "name": "glfw3",
+                    "version": "3.4#1",
+                    "features": [],
+                    "target": "glfw"
+                },
+                {
+                    "name": "imgui",
+                    "version": "1.91.7",
+                    "features": [
+                        "docking-experimental",
+                        "glfw-binding",
+                        "vulkan-binding"
+                    ],
+                    "target": "imgui::imgui"
+                },
+                {
+                    "name": "portal-application",
+                    "version": "0.0.1",
+                    "features": [],
+                    "target": "portal::application"
+                },
+                {
+                    "name": "stb",
+                    "version": "2024-07-29#1",
+                    "features": [],
+                    "target": null
+                }
+            ]
+        },
+        {
+            "name": "portal-input",
+            "subdirectory": "input",
+            "description": "The input module for the Portal framework.",
+            "build_options": [
+                "PORTAL_FIND_PACAKGE=ON"
+            ],
+            "short_name": "input",
+            "dependencies": [
+                {
+                    "name": "glfw3",
+                    "version": "3.4#1",
+                    "features": [],
+                    "target": "glfw"
+                },
+                {
+                    "name": "portal-core",
+                    "version": "0.0.1",
+                    "features": [],
+                    "target": "portal::core"
+                }
+            ]
+        },
+        {
+            "name": "portal-networking",
+            "subdirectory": "networking",
+            "description": "The networking module for the Portal framework.",
+            "build_options": [
+                "PORTAL_FIND_PACAKGE=ON"
+            ],
+            "short_name": "networking",
+            "dependencies": [
+                {
+                    "name": "GameNetworkingSockets",
+                    "version": "1.4.1#1",
+                    "features": [],
+                    "target": "GameNetworkingSockets::shared"
+                },
+                {
+                    "name": "portal-core",
+                    "version": "0.0.1",
+                    "features": [],
+                    "target": "portal::core"
+                }
+            ]
+        },
+        {
+            "name": "portal-serialization",
+            "subdirectory": "serialization",
+            "description": "Serialization library for Portal",
+            "build_options": [
+                "PORTAL_FIND_PACAKGE=ON"
+            ],
+            "short_name": "serialization",
+            "dependencies": [
+                {
+                    "name": "portal-core",
+                    "version": "0.0.1",
+                    "features": [],
+                    "target": "portal::core"
+                }
+            ]
+        }
+    ]
+}

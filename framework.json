@@ -141,6 +141,23 @@
                     "target": "portal::core"
                 }
             ]
+        },
+        {
+            "name": "portal-renderer",
+            "subdirectory": "renderer",
+            "description": "Renderer module for gui application",
+            "build_options": [
+                "PORTAL_FIND_PACAKGE=ON"
+            ],
+            "short_name": "renderer",
+            "dependencies": [
+                {
+                    "name": "portal-gui",
+                    "version": "0.0.1",
+                    "features": [],
+                    "target": "portal::gui"
+                }
+            ]
         }
     ]
 }

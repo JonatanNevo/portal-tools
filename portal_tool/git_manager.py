@@ -56,7 +56,7 @@ class GitManager(metaclass=Singleton):
         )
 
     def get_version(self, subdirectory: str) -> str:
-        version_file_path = pathlib.Path(self.temporary_folder) / "framework" / subdirectory / "version"
+        version_file_path = pathlib.Path(self.temporary_folder) / "framework" / subdirectory / "version.txt"
         if version_file_path.is_file():
             with open(version_file_path, "r") as version_file:
                 return version_file.read().strip()

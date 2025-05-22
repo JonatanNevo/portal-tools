@@ -89,7 +89,7 @@ def create_module_build_structure(module: PortalModule, sources_root: pathlib.Pa
     with open (module_path / "CMakeLists.txt", "w") as f:
         f.write(cmake_lists)
 
-    with open (module_path / "version", "w") as f:
+    with open (module_path / "version.txt", "w") as f:
         f.write("0.0.1")
 
     module_sources_path = module_path / "portal" / module.subdirectory
@@ -100,5 +100,5 @@ def create_module_build_structure(module: PortalModule, sources_root: pathlib.Pa
     if not cmake_path.exists():
         cmake_path.mkdir(parents=True)
 
-    with open (cmake_path / f"{module.name}-config.cmake", "w") as f:
+    with open (cmake_path / f"{module.name}-config.cmake.in", "w") as f:
         f.write(cmake_config)

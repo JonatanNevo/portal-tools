@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/portal-tools.iml" filepath="$PROJECT_DIR$/.idea/portal-tools.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../portal-vcpkg-registry/.idea/portal-vcpkg-registry.iml" filepath="$PROJECT_DIR$/../portal-vcpkg-registry/.idea/portal-vcpkg-registry.iml" />
     </modules>
   </component>
 </project>

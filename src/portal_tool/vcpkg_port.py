@@ -1,3 +1,4 @@
+import json
 import logging
 import pathlib
 import shlex
@@ -23,7 +24,37 @@ def enhance_portal_module(module: PortalModule) -> PortDetails:
         git=git_details,
         options=module.options,
         dependencies=[dep.model_dump() for dep in module.dependencies],
+        features=module.features,
     )
+
+
+def make_vcpkg_json(port: PortDetails, json_path: pathlib.Path) -> None:
+    json_details = {
+        "name": port.name,
+        "version": port.version,
+        "description": port.description,
+        "license": port.license,
+        "dependencies": [
+            {
+                "name": dep.name,
+                "features": dep.features,
+                "version>=": dep.version,
+            }
+            for dep in port.dependencies
+        ]
+        + [
+            {"name": "vcpkg-cmake", "host": True},
+            {"name": "vcpkg-cmake-config", "host": True},
+        ],
+    }
+    if port.features:
+        json_details["features"] = {}
+        for feature in port.features:
+            feature_json = {"description": feature.description}
+            if feature.dependencies:
+                feature_json["dependencies"] = feature.dependencies
+            json_details["features"][feature.name] = feature_json
+    json_path.write_text(json.dumps(json_details, indent=4))
 
 
 def generate_vcpkg_port(details: PortDetails, output_path: pathlib.Path) -> None:
@@ -31,10 +62,12 @@ def generate_vcpkg_port(details: PortDetails, output_path: pathlib.Path) -> None
         loader=jinja2.PackageLoader("portal_tool", "templates/vcpkg"),
     )
 
-    cmake_template = env.get_template("portfile.cmake.j2")
+    if details.features:
+        cmake_template = env.get_template("portfile.cmake-features.j2")
+    else:
+        cmake_template = env.get_template("portfile.cmake.j2")
+
     cmake = cmake_template.render(port=details)
-    vcpkg_template = env.get_template("vcpkg.json.j2")
-    vcpkg = vcpkg_template.render(port=details)
     usage_template = env.get_template("usage.j2")
     usage = usage_template.render(port=details)
 
@@ -49,10 +82,17 @@ def generate_vcpkg_port(details: PortDetails, output_path: pathlib.Path) -> None
     usage_file = port_path / "usage"
 
     port_file.write_text(cmake)
-    vcpkg_file.write_text(vcpkg)
+    make_vcpkg_json(details, vcpkg_file)
     usage_file.write_text(usage)
 
     subprocess.check_output(shlex.split(f'vcpkg format-manifest "{vcpkg_file}"'))
+
+
+GLOBAL_PORTS = [
+    PortalModule(name="enchantum"),
+    PortalModule(name="vcpkg"),
+    PortalModule(name="glaze"),
+]
 
 
 def generate_vcpkg_configuration(output_path: pathlib.Path, framework: PortalFramework):
@@ -62,7 +102,7 @@ def generate_vcpkg_configuration(output_path: pathlib.Path, framework: PortalFra
     )
     template = env.get_template("vcpkg-configuration.json.j2")
     rendered = template.render(
-        ports=framework.modules, registry_ref=git_manager.registry_commit
+        ports=framework.modules + GLOBAL_PORTS, registry_ref=git_manager.registry_commit
     )
 
     with open(output_path / "vcpkg-configuration.json", "w") as f:
@@ -76,8 +116,9 @@ def update_registry(output_path: pathlib.Path, framework: PortalFramework) -> No
         port = enhance_portal_module(module)
         generate_vcpkg_port(port, output_path)
 
-    subprocess.check_output(
+    output = subprocess.check_output(
         shlex.split(
-            f'vcpkg --x-builtin-ports-root="{output_path / "ports"}" --x-builtin-registry-versions-dir="{output_path / "versions"}" x-add-version --all --verbose'
+            f'vcpkg --x-builtin-ports-root="{output_path / "ports"}" --x-builtin-registry-versions-dir="{output_path / "versions"}" x-add-version --overwrite-version --all --verbose'
         )
     )
+    print(output.decode())

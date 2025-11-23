@@ -8,6 +8,7 @@
     </content>
     <orderEntry type="jdk" jdkName="uv (portal-tools)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="portal-vcpkg-registry" />
   </component>
   <component name="TemplatesService">
     <option name="TEMPLATE_FOLDERS">

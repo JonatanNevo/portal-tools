@@ -15,6 +15,12 @@ class Dependency(BaseModel):
     features: list[str] = Field(default_factory=list)
 
 
+class Feature(BaseModel):
+    name: str
+    description: str
+    dependencies: list[str] = Field(default_factory=list)
+
+
 class PortDetails(BaseModel):
     name: str
     short_name: str
@@ -24,16 +30,18 @@ class PortDetails(BaseModel):
     git: GitDetails = Field(default_factory=GitDetails)
     options: list[str] = Field(default_factory=list)
     dependencies: list[Dependency] = Field(default_factory=list)
+    features: list[Feature] = Field(default_factory=list)
 
 
 class PortalModule(BaseModel):
     name: str
-    short_name: str
+    short_name: str = ""
     target_override: str | None = None
-    version: str
-    description: str
+    version: str = ""
+    description: str = ""
     options: list[str] = Field(default_factory=list)
     dependencies: list[Dependency] = Field(default_factory=list)
+    features: list[Feature] = Field(default_factory=list)
 
 
 class PortalFramework(BaseModel):

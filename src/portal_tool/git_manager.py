@@ -50,9 +50,7 @@ class GitManager(metaclass=Singleton):
         self.framework_commit = (
             self.status.framework.commit if self.status.framework.commit else "Invalid"
         )
-        self.repo_sha = (
-            self.status.framework.sha if self.status.framework.sha else "Invalid"
-        )
+        self.repo_sha = self.status.framework.sha if self.status.framework.sha else None
 
         self.registry_repo = (
             self.status.registry.repo if self.status.registry.repo else "Invalid"
@@ -137,7 +135,7 @@ class GitManager(metaclass=Singleton):
                 subprocess.check_output(
                     shlex.split(f'git -C "{path}" checkout {head_ref}')
                 )
-            subprocess.check_output(shlex.split(f'git -C "{path}" pull'))
+            subprocess.check_output(shlex.split(f'git -C "{path}" pull --force'))
 
         commit = get_ref(path, head_ref)
         if commit != expected_commit:

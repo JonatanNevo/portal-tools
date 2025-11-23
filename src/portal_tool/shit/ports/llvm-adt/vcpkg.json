@@ -1,0 +1,16 @@
+{
+  "name": "llvm-adt",
+  "version": "0.1.0",
+  "description": "The ADT containers from the llvm project",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

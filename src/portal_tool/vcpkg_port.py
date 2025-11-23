@@ -1,5 +1,8 @@
 import logging
 import pathlib
+import shlex
+import subprocess
+
 import jinja2
 
 from portal_tool.git_manager import GitManager
@@ -41,12 +44,15 @@ def generate_vcpkg_port(details: PortDetails, output_path: pathlib.Path) -> None
 
     logging.info(f"Generating vcpkg port at: {port_path}")
 
-    with open(port_path / "portfile.cmake", "w") as f:
-        f.write(cmake)
-    with open(port_path / "vcpkg.json", "w") as f:
-        f.write(vcpkg)
-    with open(port_path / "usage", "w") as f:
-        f.write(usage)
+    port_file = port_path / "portfile.cmake"
+    vcpkg_file = port_path / "vcpkg.json"
+    usage_file = port_path / "usage"
+
+    port_file.write_text(cmake)
+    vcpkg_file.write_text(vcpkg)
+    usage_file.write_text(usage)
+
+    subprocess.check_output(shlex.split(f'vcpkg format-manifest "{vcpkg_file}"'))
 
 
 def generate_vcpkg_configuration(output_path: pathlib.Path, framework: PortalFramework):
@@ -65,6 +71,13 @@ def generate_vcpkg_configuration(output_path: pathlib.Path, framework: PortalFra
 
 def update_registry(output_path: pathlib.Path, framework: PortalFramework) -> None:
     logging.info(f"Updating vcpkg registry at: {output_path.absolute()}")
+    GitManager().validate_modules_versions(framework.modules)
     for module in framework.modules:
         port = enhance_portal_module(module)
         generate_vcpkg_port(port, output_path)
+
+    subprocess.check_output(
+        shlex.split(
+            f'vcpkg --x-builtin-ports-root="{output_path / "ports"}" --x-builtin-registry-versions-dir="{output_path / "versions"}" x-add-version --all --verbose'
+        )
+    )

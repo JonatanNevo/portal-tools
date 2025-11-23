@@ -5,7 +5,7 @@
       "repository": "https://github.com/JonatanNevo/portal-vcpkg-registry",
       "reference": "main",
       "baseline": "{{ registry_ref }}",
-      "packages": [{% for port in ports %} "{{ port.name }}" {% endfor %}]
+      "packages": [{% for port in ports %} "{{ port.name }}", {% endfor %}]
     }
   ]
 }

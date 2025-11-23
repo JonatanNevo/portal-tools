@@ -9,7 +9,13 @@ import requests
 
 import appdirs
 
-from portal_tool.models import GitDetails, PortalFramework, LocalStatus, GitStatus
+from portal_tool.models import (
+    GitDetails,
+    PortalFramework,
+    LocalStatus,
+    GitStatus,
+    PortalModule,
+)
 from portal_tool.singleton import Singleton
 
 
@@ -57,7 +63,7 @@ class GitManager(metaclass=Singleton):
         self.dirty = False
 
     def dump_status(self) -> None:
-        self.dirty = True
+        self.dirty = False
         status = LocalStatus(
             framework=GitStatus(
                 repo=self.framework_repo,
@@ -131,7 +137,7 @@ class GitManager(metaclass=Singleton):
                 subprocess.check_output(
                     shlex.split(f'git -C "{path}" checkout {head_ref}')
                 )
-                subprocess.check_output(shlex.split(f'git -C "{path}" pull'))
+            subprocess.check_output(shlex.split(f'git -C "{path}" pull'))
 
         commit = get_ref(path, head_ref)
         if commit != expected_commit:
@@ -192,3 +198,12 @@ class GitManager(metaclass=Singleton):
                 return version_file.read().strip()
         logging.warning(f"Could not find version file at {version_file_path}")
         return "0.0.0"
+
+    def validate_modules_versions(self, modules: list[PortalModule]) -> None:
+        for module in modules:
+            module_version = self.get_version(module.short_name)
+            if module_version != module.version:
+                logging.warning(
+                    f"Module {module.name} has version {module_version} but expected {module.version}"
+                )
+                module.version = module_version

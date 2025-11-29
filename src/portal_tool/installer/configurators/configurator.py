@@ -30,6 +30,8 @@ class Configurator(metaclass=abc.ABCMeta):
                 "No vcpkg installation, please install it manually and try again."
             )
 
+        self._try_install_vcpkg_dependencies()
+
         installation_directory = pathlib.Path(
             typer.prompt(
                 "Choose installation directory:",
@@ -38,8 +40,6 @@ class Configurator(metaclass=abc.ABCMeta):
         )
         if not installation_directory.exists():
             installation_directory.mkdir(parents=True)
-
-        typer.echo(f"Cloning into: {installation_directory}...")
 
         subprocess.check_output(
             shlex.split(
@@ -54,5 +54,13 @@ class Configurator(metaclass=abc.ABCMeta):
         )
 
     @abc.abstractmethod
+    def _try_install_vcpkg_dependencies(self) -> None:
+        pass
+
+    @abc.abstractmethod
     def _get_script_extension(self) -> str:
+        pass
+
+    @abc.abstractmethod
+    def _install_package(self, packages: list[str]) -> None:
         pass

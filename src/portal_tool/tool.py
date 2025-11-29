@@ -4,7 +4,9 @@ from typing import Annotated
 
 import appdirs
 import typer
+from pydantic_settings import BaseSettings
 
+from portal_tool.installer.installer import Installer
 from portal_tool.git_manager import GitManager
 from portal_tool.models import PortalFramework
 from portal_tool.vcpkg_port import (
@@ -17,6 +19,11 @@ global_working_directory = pathlib.Path.cwd()
 framework: PortalFramework
 
 registry = typer.Typer()
+
+
+class Settings(BaseSettings):
+    registry_url: str = "github.com:JonatanNevo/portal-vcpkg-registry"
+    examples_url: str = "github.com:JonatanNevo/portal-examples"
 
 
 @registry.command()
@@ -41,6 +48,12 @@ def sync_framework_data(*args, **kwargs) -> None:
 
 app = typer.Typer(result_callback=sync_framework_data)
 app.add_typer(registry, name="registry", help="Commands for managing the registry")
+
+
+@app.command()
+def install() -> None:
+    installer = Installer(Settings().examples_url, Settings().registry_url)
+    installer.install()
 
 
 @app.callback()

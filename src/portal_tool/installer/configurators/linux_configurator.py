@@ -36,3 +36,6 @@ class LinuxConfigurator(Configurator):
 
     def _get_script_extension(self) -> str:
         return "sh"
+
+    def _get_executable_extension(self) -> str:
+        return ""

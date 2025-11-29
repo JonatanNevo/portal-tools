@@ -16,3 +16,6 @@ class WindowsConfigurator(Configurator):
 
     def _get_script_extension(self) -> str:
         return "bat"
+
+    def _get_executable_extension(self) -> str:
+        return ".exe"

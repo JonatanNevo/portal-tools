@@ -7,4 +7,5 @@ class Installer:
         self.registry_url = registry_url
 
     def install(self) -> None:
-        ConfiguratorFactory().create()
+        configurator = ConfiguratorFactory().create()
+        configurator.configure_vcpkg()

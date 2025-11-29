@@ -38,8 +38,11 @@ class Configurator(metaclass=abc.ABCMeta):
                 default=os.path.join(os.path.expanduser("~"), ".vcpkg"),
             )
         )
-        if not installation_directory.exists():
-            installation_directory.mkdir(parents=True)
+        if installation_directory.exists():
+            override = typer.confirm("Folder exists, overwrite?")
+            if not override:
+                raise typer.Abort("Installation aborted.")
+            installation_directory.rmdir()
 
         subprocess.check_output(
             shlex.split(

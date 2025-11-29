@@ -3,6 +3,7 @@ import os
 
 import pathlib
 import shlex
+import shutil
 import subprocess
 
 import typer
@@ -42,7 +43,7 @@ class Configurator(metaclass=abc.ABCMeta):
             override = typer.confirm("Folder exists, overwrite?")
             if not override:
                 raise typer.Abort("Installation aborted.")
-            installation_directory.rmdir()
+            shutil.rmtree(installation_directory)
 
         subprocess.check_output(
             shlex.split(

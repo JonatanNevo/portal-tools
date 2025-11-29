@@ -48,8 +48,6 @@ def registry_start(
     global global_working_directory
     global_working_directory = working_dir
 
-    logging.basicConfig(level=logging.INFO)
-
     user_data_path = pathlib.Path(appdirs.user_data_dir("portal-tool"))
 
     if framework_path is not None:
@@ -102,6 +100,11 @@ app.add_typer(registry, name="registry", help="Commands for managing the registr
 def install() -> None:
     installer = Installer(Settings().examples_url, Settings().registry_url)
     installer.install()
+
+
+@app.callback()
+def main():
+    logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == "__main__":

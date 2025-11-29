@@ -18,46 +18,13 @@ from portal_tool.vcpkg_port import (
 global_working_directory = pathlib.Path.cwd()
 framework: PortalFramework
 
-registry = typer.Typer()
-
 
 class Settings(BaseSettings):
     registry_url: str = "github.com:JonatanNevo/portal-vcpkg-registry"
     examples_url: str = "github.com:JonatanNevo/portal-examples"
 
 
-@registry.command()
-def update() -> None:
-    update_registry(global_working_directory, framework)
-
-
-@registry.command()
-def update_versions() -> None:
-    update_vcpkg_versions(global_working_directory)
-
-
-@registry.command()
-def create_config() -> None:
-    generate_vcpkg_configuration(global_working_directory, framework)
-
-
-def sync_framework_data(*args, **kwargs) -> None:
-    user_data_path = pathlib.Path(appdirs.user_data_dir("portal-tool"))
-    (user_data_path / "framework.json").write_text(framework.model_dump_json(indent=4))
-
-
-app = typer.Typer(result_callback=sync_framework_data)
-app.add_typer(registry, name="registry", help="Commands for managing the registry")
-
-
-@app.command()
-def install() -> None:
-    installer = Installer(Settings().examples_url, Settings().registry_url)
-    installer.install()
-
-
-@app.callback()
-def main(
+def registry_start(
     working_dir: Annotated[
         pathlib.Path,
         typer.Option(
@@ -102,6 +69,39 @@ def main(
         )
 
     GitManager().init_repo(framework)
+
+
+def registry_end(*args, **kwargs) -> None:
+    user_data_path = pathlib.Path(appdirs.user_data_dir("portal-tool"))
+    (user_data_path / "framework.json").write_text(framework.model_dump_json(indent=4))
+
+
+registry = typer.Typer(callback=registry_start, result_callback=registry_end)
+
+
+@registry.command()
+def update() -> None:
+    update_registry(global_working_directory, framework)
+
+
+@registry.command()
+def update_versions() -> None:
+    update_vcpkg_versions(global_working_directory)
+
+
+@registry.command()
+def create_config() -> None:
+    generate_vcpkg_configuration(global_working_directory, framework)
+
+
+app = typer.Typer()
+app.add_typer(registry, name="registry", help="Commands for managing the registry")
+
+
+@app.command()
+def install() -> None:
+    installer = Installer(Settings().examples_url, Settings().registry_url)
+    installer.install()
 
 
 if __name__ == "__main__":

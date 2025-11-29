@@ -1,12 +1,12 @@
 vcpkg_from_github(
-        OUT_SOURCE_PATH SOURCE_PATH
+        OUT_SOURCE_PATH REPO_ROOT_PATH
         REPO {{ port.git.repo }}
         REF {{ port.git.ref }}
         SHA512 {{ port.git.sha }}
         HEAD_REF {{ port.git.head_ref }}
 )
 
-{% if port.git.subdirectory %}set(SOURCE_PATH "${SOURCE_PATH}/{{ port.git.subdirectory }}"){% endif %}
+{% if port.git.subdirectory %}set(SOURCE_PATH "${REPO_ROOT_PATH}/{{ port.git.subdirectory }}"){% else %}set(SOURCE_PATH "${REPO_ROOT_PATH}"){% endif %}
 
 set(FEATURE_OPTIONS "")
 if("tests" IN_LIST FEATURES)
@@ -34,8 +34,9 @@ vcpkg_cmake_config_fixup(
         CONFIG_PATH share/{{ port.name }}
 )
 
-file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include" "${CURRENT_PACKAGES_DIR}/debug/share")
 
 configure_file("${CMAKE_CURRENT_LIST_DIR}/usage" "${CURRENT_PACKAGES_DIR}/share/${PORT}/usage" COPYONLY)
 
 vcpkg_copy_pdbs()
+vcpkg_install_copyright(FILE_LIST "${REPO_ROOT_PATH}/LICENSE")

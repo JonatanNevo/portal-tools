@@ -7,7 +7,11 @@ import typer
 
 from portal_tool.git_manager import GitManager
 from portal_tool.models import PortalFramework
-from portal_tool.vcpkg_port import update_registry, generate_vcpkg_configuration
+from portal_tool.vcpkg_port import (
+    update_registry,
+    generate_vcpkg_configuration,
+    update_vcpkg_versions,
+)
 
 global_working_directory = pathlib.Path.cwd()
 framework: PortalFramework
@@ -18,6 +22,11 @@ registry = typer.Typer()
 @registry.command()
 def update() -> None:
     update_registry(global_working_directory, framework)
+
+
+@registry.command()
+def update_versions() -> None:
+    update_vcpkg_versions(global_working_directory)
 
 
 @registry.command()

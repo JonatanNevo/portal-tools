@@ -28,7 +28,9 @@ def enhance_portal_module(module: PortalModule) -> PortDetails:
     )
 
 
-def make_vcpkg_json(port: PortDetails, json_path: pathlib.Path) -> None:
+def make_vcpkg_json(changes: bool, port: PortDetails, json_path: pathlib.Path) -> None:
+    old_vcpkg_json = json.loads(json_path.read_text() if json_path.exists() else "{}")
+
     json_details = {
         "name": port.name,
         "version": port.version,
@@ -54,6 +56,10 @@ def make_vcpkg_json(port: PortDetails, json_path: pathlib.Path) -> None:
             if feature.dependencies:
                 feature_json["dependencies"] = feature.dependencies
             json_details["features"][feature.name] = feature_json
+
+    if changes and json_details["version"] == old_vcpkg_json.get("version"):
+        json_details["port-version"] = old_vcpkg_json.get("port-version", 0) + 1
+
     json_path.write_text(json.dumps(json_details, indent=4))
 
 
@@ -81,8 +87,10 @@ def generate_vcpkg_port(details: PortDetails, output_path: pathlib.Path) -> None
     vcpkg_file = port_path / "vcpkg.json"
     usage_file = port_path / "usage"
 
+    old_port_file_data = port_file.read_text() if port_file.exists() else ""
+    changed_detected = old_port_file_data == cmake
     port_file.write_text(cmake)
-    make_vcpkg_json(details, vcpkg_file)
+    make_vcpkg_json(changed_detected, details, vcpkg_file)
     usage_file.write_text(usage)
 
     subprocess.check_output(shlex.split(f'vcpkg format-manifest "{vcpkg_file}"'))
@@ -116,9 +124,11 @@ def update_registry(output_path: pathlib.Path, framework: PortalFramework) -> No
         port = enhance_portal_module(module)
         generate_vcpkg_port(port, output_path)
 
+
+def update_vcpkg_versions(output_path: pathlib.Path) -> None:
     output = subprocess.check_output(
         shlex.split(
-            f'vcpkg --x-builtin-ports-root="{output_path / "ports"}" --x-builtin-registry-versions-dir="{output_path / "versions"}" x-add-version --overwrite-version --all --verbose'
+            f'vcpkg --x-builtin-ports-root="{output_path / "ports"}" --x-builtin-registry-versions-dir="{output_path / "versions"}" x-add-version --all --verbose'
         )
     )
     print(output.decode())

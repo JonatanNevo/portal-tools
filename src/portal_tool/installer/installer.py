@@ -9,3 +9,4 @@ class Installer:
     def install(self) -> None:
         configurator = ConfiguratorFactory().create()
         configurator.configure_vcpkg()
+        configurator.configure_build_environment()

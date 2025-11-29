@@ -19,6 +19,12 @@ class Configurator(metaclass=abc.ABCMeta):
         else:
             typer.echo(f"Global vcpkg found at: {root}")
 
+    def configure_build_environment(self) -> None:
+        typer.echo("Configuring build environment...")
+        self._validate_compilers()
+        self._validate_cmake()
+        self._validate_dependencies()
+
     def _try_install_vcpkg(self) -> None:
         install_vcpkg = typer.confirm("Would you like to install vcpkg?")
         if not install_vcpkg:
@@ -51,6 +57,7 @@ class Configurator(metaclass=abc.ABCMeta):
                 f"{installation_directory}/bootstrap-vcpkg.{self._get_script_extension()}"
             )
         )
+        typer.echo(f"Vcpkg installed successfully to: {installation_directory}")
 
     def _find_vcpkg_root(self) -> pathlib.Path | None:
         value = os.environ.get("VCPKG_ROOT")
@@ -64,6 +71,12 @@ class Configurator(metaclass=abc.ABCMeta):
             ):
                 return installed_vcpkg
         return pathlib.Path(value) if value else None
+
+    def _validate_cmake(self) -> None:
+        pass
+
+    def _validate_dependencies(self) -> None:
+        pass
 
     @abc.abstractmethod
     def _try_install_vcpkg_dependencies(self) -> None:
@@ -79,4 +92,8 @@ class Configurator(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def _install_package(self, packages: list[str]) -> None:
+        pass
+
+    @abc.abstractmethod
+    def _validate_compilers(self) -> None:
         pass

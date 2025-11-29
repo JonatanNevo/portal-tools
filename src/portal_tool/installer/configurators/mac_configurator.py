@@ -14,6 +14,9 @@ class MacConfigurator(Configurator):
     def _install_package(self, packages: list[str]) -> None:
         raise NotImplementedError
 
+    def _validate_compilers(self) -> None:
+        raise NotImplementedError
+
     def _get_script_extension(self) -> str:
         return "sh"
 

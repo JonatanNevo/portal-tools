@@ -88,7 +88,7 @@ def generate_vcpkg_port(details: PortDetails, output_path: pathlib.Path) -> None
     usage_file = port_path / "usage"
 
     old_port_file_data = port_file.read_text() if port_file.exists() else ""
-    changed_detected = old_port_file_data == cmake
+    changed_detected = old_port_file_data != cmake
     port_file.write_text(cmake)
     make_vcpkg_json(changed_detected, details, vcpkg_file)
     usage_file.write_text(usage)

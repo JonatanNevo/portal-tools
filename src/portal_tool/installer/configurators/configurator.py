@@ -75,6 +75,7 @@ class Configurator(metaclass=abc.ABCMeta):
     def _validate_cmake(self) -> None:
         pass
 
+    @abc.abstractmethod
     def _validate_dependencies(self) -> None:
         pass
 

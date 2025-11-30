@@ -98,7 +98,7 @@ def generate_vcpkg_port(details: PortDetails, output_path: pathlib.Path) -> None
 
 GLOBAL_PORTS = [
     PortalModule(name="enchantum"),
-    PortalModule(name="vcpkg"),
+    PortalModule(name="spdlog"),
     PortalModule(name="glaze"),
 ]
 

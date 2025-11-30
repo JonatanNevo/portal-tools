@@ -12,6 +12,7 @@ from portal_tool.installer.configurators.configurator import Configurator
 class UbuntuDistro(enum.Enum):
     Debian = enum.auto()
     Fedora = enum.auto()
+    Alpine = enum.auto()
 
 
 class LinuxConfigurator(Configurator):
@@ -23,6 +24,8 @@ class LinuxConfigurator(Configurator):
             self.distro = UbuntuDistro.Debian
         elif "fedora" in uname_version.lower():
             self.distro = UbuntuDistro.Fedora
+        elif "alpine" in uname_version.lower():
+            self.distro = UbuntuDistro.Alpine
         else:
             typer.Abort(f"Unsupported Linux distribution: {uname_version}")
 
@@ -33,8 +36,12 @@ class LinuxConfigurator(Configurator):
     def _install_package(self, packages: list[str]) -> None:
         if self.distro == UbuntuDistro.Debian:
             subprocess.check_call(["sudo", "apt-get", "install", *packages])
-        else:
+        elif self.distro == UbuntuDistro.Alpine:
+            subprocess.check_call(["sudo", "apk", "add", *packages])
+        elif self.distro == UbuntuDistro.Fedora:
             subprocess.check_call(["sudo", "dnf", "install", *packages])
+        else:
+            raise typer.Abort(f"Unsupported Linux distribution: {self.distro}")
 
     def _validate_compilers(self) -> None:
         typer.echo("Validating compilers...")
@@ -115,6 +122,40 @@ class LinuxConfigurator(Configurator):
             raise typer.Abort("Compiler validation failed")
 
         typer.echo("Compiler validation successful!")
+
+    def _validate_dependencies(self) -> None:
+        dependency_map = {
+            "All": [
+                "pkg-config",
+                "extra-cmake-modulesautoconf-archive",
+                "automake",
+                "libtool",
+            ],
+            "Debian": [
+                "linux-libc-dev",
+                "libwayland-dev",
+                "libxkbcommon-dev",
+                "wayland-protocols",
+            ],
+            "Fedora": [
+                "wayland-devel",
+                "libxkbcommon-devel",
+                "wayland-protocols-devel",
+            ],
+            "Alpine": ["linux-headers"],
+        }
+
+        dependency_list = dependency_map["All"] + dependency_map.get(
+            self.distro.name, []
+        )
+        typer.echo(f"The following dependencies are required: {dependency_list}")
+        proceed = typer.confirm("Would you like to install them?")
+        if proceed:
+            self._install_package(dependency_list)
+        else:
+            typer.echo(
+                "Please install them manually before building, exit now if some of them are missing"
+            )
 
     def _get_script_extension(self) -> str:
         return "sh"

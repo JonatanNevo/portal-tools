@@ -81,7 +81,11 @@ class WindowsConfigurator(Configurator):
             typer.echo("\nNo valid compiler found!")
             typer.echo("Please install at least one of the following:")
             typer.echo("  - Clang 19 or later")
+            typer.echo("        can be installed from here https://releases.llvm.org/")
             typer.echo("  - MSVC 17 or later")
+            typer.echo(
+                "        can be installed from here https://visualstudio.microsoft.com/downloads/"
+            )
             raise typer.Abort("Compiler validation failed")
 
         typer.echo("Compiler validation successful!")

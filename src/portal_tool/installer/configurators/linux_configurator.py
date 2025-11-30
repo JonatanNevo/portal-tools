@@ -35,11 +35,11 @@ class LinuxConfigurator(Configurator):
 
     def _install_package(self, packages: list[str]) -> None:
         if self.distro == UbuntuDistro.Debian:
-            subprocess.check_call(["sudo", "apt-get", "install", *packages])
+            subprocess.check_output(["sudo", "apt-get", "install", *packages])
         elif self.distro == UbuntuDistro.Alpine:
-            subprocess.check_call(["sudo", "apk", "add", *packages])
+            subprocess.check_output(["sudo", "apk", "add", *packages])
         elif self.distro == UbuntuDistro.Fedora:
-            subprocess.check_call(["sudo", "dnf", "install", *packages])
+            subprocess.check_output(["sudo", "dnf", "install", *packages])
         else:
             raise typer.Abort(f"Unsupported Linux distribution: {self.distro}")
 

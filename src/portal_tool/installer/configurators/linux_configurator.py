@@ -2,6 +2,7 @@ import logging
 import enum
 import platform
 import re
+import shlex
 import subprocess
 
 import typer
@@ -35,11 +36,15 @@ class LinuxConfigurator(Configurator):
 
     def _install_package(self, packages: list[str]) -> None:
         if self.distro == UbuntuDistro.Debian:
-            subprocess.check_output(["sudo", "apt-get", "install", *packages])
+            subprocess.check_output(
+                shlex.split(f"sudo apt-get install -y {' '.join(packages)}")
+            )
         elif self.distro == UbuntuDistro.Alpine:
-            subprocess.check_output(["sudo", "apk", "add", *packages])
+            subprocess.check_output(shlex.split(f"sudo apk add {' '.join(packages)}"))
         elif self.distro == UbuntuDistro.Fedora:
-            subprocess.check_output(["sudo", "dnf", "install", *packages])
+            subprocess.check_output(
+                shlex.split(f"sudo dnf install {' '.join(packages)}")
+            )
         else:
             raise typer.Abort(f"Unsupported Linux distribution: {self.distro}")
 

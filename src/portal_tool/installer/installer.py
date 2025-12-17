@@ -6,7 +6,11 @@ class Installer:
         self.examples_url = examples_url
         self.registry_url = registry_url
 
-    def install(self) -> None:
+    def install(self, vcpkg: bool, environment: bool) -> None:
         configurator = ConfiguratorFactory().create()
-        configurator.configure_vcpkg()
-        configurator.configure_build_environment()
+
+        if vcpkg:
+            configurator.configure_vcpkg()
+
+        if environment:
+            configurator.configure_build_environment()

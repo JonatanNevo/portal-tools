@@ -12,12 +12,25 @@ import typer
 class Configurator(metaclass=abc.ABCMeta):
     def configure_vcpkg(self) -> None:
         typer.echo("Configuring vcpkg...")
-        root = self._find_vcpkg_root()
+        root, _ = self.find_vcpkg_root()
         if root is None:
             typer.echo("Failed to find global vcpkg.")
             self._try_install_vcpkg()
         else:
             typer.echo(f"Global vcpkg found at: {root}")
+
+    def find_vcpkg_root(self) -> tuple[pathlib.Path, bool] | tuple[None, None]:
+        value = os.environ.get("VCPKG_ROOT")
+        if value is None:
+            installed_vcpkg = pathlib.Path(os.path.expanduser("~")) / ".vcpkg"
+            if (
+                installed_vcpkg.exists()
+                and (
+                    installed_vcpkg / f"vcpkg{self._get_executable_extension()}"
+                ).exists()
+            ):
+                return installed_vcpkg, False
+        return (pathlib.Path(value), True) if value else (None, None)
 
     def configure_build_environment(self) -> None:
         typer.echo("Configuring build environment...")
@@ -58,19 +71,6 @@ class Configurator(metaclass=abc.ABCMeta):
             )
         )
         typer.echo(f"Vcpkg installed successfully to: {installation_directory}")
-
-    def _find_vcpkg_root(self) -> pathlib.Path | None:
-        value = os.environ.get("VCPKG_ROOT")
-        if value is None:
-            installed_vcpkg = pathlib.Path(os.path.expanduser("~")) / ".vcpkg"
-            if (
-                installed_vcpkg.exists()
-                and (
-                    installed_vcpkg / f"vcpkg{self._get_executable_extension()}"
-                ).exists()
-            ):
-                return installed_vcpkg
-        return pathlib.Path(value) if value else None
 
     def _validate_cmake(self) -> None:
         pass

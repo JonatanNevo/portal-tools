@@ -6,6 +6,7 @@ import appdirs
 import typer
 from pydantic_settings import BaseSettings
 
+from portal_tool.installer.repo.repo_maker import RepoMaker
 from portal_tool.installer.installer import Installer
 from portal_tool.git_manager import GitManager
 from portal_tool.models import PortalFramework
@@ -97,9 +98,31 @@ app.add_typer(registry, name="registry", help="Commands for managing the registr
 
 
 @app.command()
-def install() -> None:
+def install(
+    dependencies_only: Annotated[
+        bool,
+        typer.Option(
+            "--only-dependencies",
+            help="Only installs the dependencies, skips all other stages",
+        ),
+    ] = False,
+) -> None:
     installer = Installer(Settings().examples_url, Settings().registry_url)
-    installer.install()
+
+    if dependencies_only:
+        installer.install(False, True)
+    else:
+        installer.install(True, True)
+
+
+@app.command()
+def init(
+    directory: Annotated[
+        pathlib.Path,
+        typer.Option("-d", "--dir", help="The directory to initialize the project in"),
+    ] = pathlib.Path.cwd(),
+) -> None:
+    RepoMaker(directory)
 
 
 @app.callback()

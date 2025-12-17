@@ -36,9 +36,12 @@ class WindowsConfigurator(Configurator):
                 if match:
                     major = int(match.group(1))
                     if major >= 19:
-                        typer.echo(
-                            f"Clang {major}.{match.group(2)} found ({installation_path.group(1)})"
+                        path_info = (
+                            f" ({installation_path.group(1)})"
+                            if installation_path
+                            else ""
                         )
+                        typer.echo(f"Clang {major}.{match.group(2)} found{path_info}")
                         clang_valid = True
                     else:
                         typer.echo(
@@ -68,9 +71,10 @@ class WindowsConfigurator(Configurator):
                 minor = int(match.group(2))
                 version_str = f"{major}.{minor}"
                 if major >= 17:
-                    typer.echo(
-                        f"MSVC {version_str} found ({installation_path.group(1)})"
+                    path_info = (
+                        f" ({installation_path.group(1)})" if installation_path else ""
                     )
+                    typer.echo(f"MSVC {version_str} found{path_info}")
                     msvc_valid = True
                 else:
                     typer.echo(f"MSVC {version_str} found, but version 17+ is required")
@@ -95,3 +99,7 @@ class WindowsConfigurator(Configurator):
 
     def _get_executable_extension(self) -> str:
         return ".exe"
+
+    def _validate_dependencies(self) -> None:
+        # Windows does not have any dependencies that need validating
+        typer.echo("No dependencies to validate!")

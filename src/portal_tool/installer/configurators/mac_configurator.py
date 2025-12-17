@@ -1,5 +1,6 @@
 import logging
 
+import typer
 
 from portal_tool.installer.configurators.configurator import Configurator
 
@@ -15,10 +16,13 @@ class MacConfigurator(Configurator):
         raise NotImplementedError
 
     def _validate_compilers(self) -> None:
-        raise NotImplementedError
+        typer.echo("Missing compiler validation, skipping...")
 
     def _get_script_extension(self) -> str:
         return "sh"
 
     def _get_executable_extension(self) -> str:
         return ""
+
+    def _validate_dependencies(self) -> None:
+        typer.echo("No dependencies to validate!")

@@ -28,4 +28,4 @@ class ConfiguratorFactory:
         if system_configurator is None:
             raise ValueError(f"Unsupported platform: {local_details.name}")
 
-        return system_configurator()
+        return system_configurator(yes)

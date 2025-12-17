@@ -11,7 +11,7 @@ from portal_tool.installer.configurators.configurator import Configurator
 
 
 class WindowsConfigurator(Configurator):
-    def __init__(self):
+    def __init__(self, yes: bool):
         logging.info("Running Windows 11 configurator")
 
     def _try_install_vcpkg_dependencies(self) -> None:

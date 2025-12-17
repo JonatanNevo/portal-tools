@@ -106,8 +106,16 @@ def install(
             help="Only installs the dependencies, skips all other stages",
         ),
     ] = False,
+    auto_yes: Annotated[
+        bool,
+        typer.Option(
+            "-y",
+            "--yes",
+            help="Automatically answer yes to all questions.",
+        ),
+    ] = False,
 ) -> None:
-    installer = Installer(Settings().examples_url, Settings().registry_url)
+    installer = Installer(Settings().examples_url, Settings().registry_url, auto_yes)
 
     if dependencies_only:
         installer.install(False, True)

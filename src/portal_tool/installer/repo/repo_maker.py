@@ -25,7 +25,7 @@ class RepoMaker:
     """
 
     def __init__(self, path: pathlib.Path):
-        self.configurator = ConfiguratorFactory().create()
+        self.configurator = ConfiguratorFactory().create(False)
         self.presets = CMakePresets()
 
         self.name = typer.prompt("Project Name")

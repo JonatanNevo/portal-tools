@@ -17,9 +17,10 @@ class UbuntuDistro(enum.Enum):
 
 
 class LinuxConfigurator(Configurator):
-    def __init__(self):
+    def __init__(self, yes: bool):
         logging.info("Running Ubuntu configurator")
         uname_version = platform.version()
+        self.yes = yes
 
         if "ubuntu" in uname_version.lower() or "debian" in uname_version.lower():
             self.distro = UbuntuDistro.Debian
@@ -155,7 +156,12 @@ class LinuxConfigurator(Configurator):
             self.distro.name, []
         )
         typer.echo(f"The following dependencies are required: {dependency_list}")
-        proceed = typer.confirm("Would you like to install them?")
+
+        if self.yes:
+            proceed = True
+        else:
+            proceed = typer.confirm("Would you like to install them?")
+
         if proceed:
             self._install_package(dependency_list)
         else:

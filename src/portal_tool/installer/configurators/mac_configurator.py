@@ -6,7 +6,7 @@ from portal_tool.installer.configurators.configurator import Configurator
 
 
 class MacConfigurator(Configurator):
-    def __init__(self):
+    def __init__(self, yes: bool):
         logging.info("Running MacOs configurator")
 
     def _try_install_vcpkg_dependencies(self) -> None:

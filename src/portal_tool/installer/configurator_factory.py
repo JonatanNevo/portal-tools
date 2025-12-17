@@ -21,7 +21,7 @@ class ConfiguratorFactory:
             "Darwin": MacConfigurator,
         }
 
-    def create(self) -> Configurator:
+    def create(self, yes: bool) -> Configurator:
         local_details = PlatformDetails(platform.system(), str(platform.version()))
 
         system_configurator = self.configurators.get(local_details.name)

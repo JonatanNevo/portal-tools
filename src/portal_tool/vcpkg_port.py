@@ -100,6 +100,7 @@ GLOBAL_PORTS = [
     PortalModule(name="enchantum"),
     PortalModule(name="spdlog"),
     PortalModule(name="glaze"),
+    PortalModule(name="llvm-adt"),
 ]
 
 

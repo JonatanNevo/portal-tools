@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish:
-    name: ${{ workflow.name }}
+    name: ${{ github.workflow }}
     runs-on: ubuntu-latest
     environment:
       name: Release

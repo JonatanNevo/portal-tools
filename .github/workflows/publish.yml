@@ -1,9 +1,8 @@
 name: Publish
 
 on:
-  push:
-    tags:
-      - v*
+  release:
+    types: [published]
 
 jobs:
   publish:
@@ -13,7 +12,7 @@ jobs:
       name: Release
     permissions:
       id-token: write
-      contents: read
+      contents: write
 
     steps:
       - uses: actions/checkout@v5
@@ -45,3 +44,12 @@ jobs:
 
       - name: Publish
         run: uv publish
+
+      - name: Upload wheel and sdist to GitHub Release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          fail_on_unmatched_files: true
+          tag_name: ${{ github.event.release.tag_name }}

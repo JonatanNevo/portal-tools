@@ -10,7 +10,7 @@ import typer
 from portal_tool.installer.configurators.configurator import Configurator
 
 
-class UbuntuDistro(enum.Enum):
+class LinuxDistro(enum.Enum):
     Debian = enum.auto()
     Fedora = enum.auto()
     Alpine = enum.auto()
@@ -18,31 +18,55 @@ class UbuntuDistro(enum.Enum):
 
 class LinuxConfigurator(Configurator):
     def __init__(self, yes: bool):
-        logging.info("Running Ubuntu configurator")
-        uname_version = platform.version()
         self.yes = yes
 
-        if "ubuntu" in uname_version.lower() or "debian" in uname_version.lower():
-            self.distro = UbuntuDistro.Debian
-        elif "fedora" in uname_version.lower():
-            self.distro = UbuntuDistro.Fedora
-        elif "alpine" in uname_version.lower():
-            self.distro = UbuntuDistro.Alpine
-        else:
-            typer.Abort(f"Unsupported Linux distribution: {uname_version}")
+        logging.info("Running Ubuntu configurator")
+        self.distro = self._detect_distro()
+
+    @staticmethod
+    def _detect_distro() -> LinuxDistro:
+        try:
+            with open("/etc/os-release") as f:
+                content = f.read()
+
+            if (
+                "ID=ubuntu" in content
+                or "ID=debian" in content
+                or "ID_LIKE=debian" in content
+            ):
+                return LinuxDistro.Debian
+            elif "ID=fedora" in content or "ID_LIKE=fedora" in content:
+                return LinuxDistro.Fedora
+            elif "ID=alpine" in content:
+                return LinuxDistro.Alpine
+        except FileNotFoundError:
+            pass
+
+        # Fallback to platform if os-release is missing
+        uname_version = platform.version().lower()
+        if "ubuntu" in uname_version or "debian" in uname_version:
+            return LinuxDistro.Debian
+        elif "fedora" in uname_version:
+            return LinuxDistro.Fedora
+        elif "alpine" in uname_version:
+            return LinuxDistro.Alpine
+
+        raise typer.Abort(
+            "Unsupported Linux distribution. Could not detect from /etc/os-release or uname."
+        )
 
     def _try_install_vcpkg_dependencies(self) -> None:
         typer.echo("Installing vcpkg dependencies... (curl, zip, unzip, tar)")
         self._install_package(["curl", "zip", "unzip", "tar"])
 
     def _install_package(self, packages: list[str]) -> None:
-        if self.distro == UbuntuDistro.Debian:
+        if self.distro == LinuxDistro.Debian:
             subprocess.check_output(
                 shlex.split(f"sudo apt-get install -y {' '.join(packages)}")
             )
-        elif self.distro == UbuntuDistro.Alpine:
+        elif self.distro == LinuxDistro.Alpine:
             subprocess.check_output(shlex.split(f"sudo apk add {' '.join(packages)}"))
-        elif self.distro == UbuntuDistro.Fedora:
+        elif self.distro == LinuxDistro.Fedora:
             subprocess.check_output(
                 shlex.split(f"sudo dnf install {' '.join(packages)}")
             )

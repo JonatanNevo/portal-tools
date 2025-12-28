@@ -37,6 +37,7 @@ class Configurator(metaclass=abc.ABCMeta):
         self._validate_compilers()
         self._validate_cmake()
         self._validate_dependencies()
+        self._validate_uv()
 
     def _try_install_vcpkg(self) -> None:
         install_vcpkg = typer.confirm("Would you like to install vcpkg?")
@@ -97,4 +98,8 @@ class Configurator(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def _validate_compilers(self) -> None:
+        pass
+
+    @abc.abstractmethod
+    def _validate_uv(self) -> None:
         pass

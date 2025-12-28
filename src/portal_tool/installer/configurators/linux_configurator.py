@@ -161,12 +161,14 @@ class LinuxConfigurator(Configurator):
                 "autoconf-archive",
                 "automake",
                 "libtool",
+                "ninja-build",
             ],
             "Debian": [
                 "linux-libc-dev",
                 "libwayland-dev",
                 "libxkbcommon-dev",
                 "wayland-protocols",
+                "python3.12-venv",
             ],
             "Fedora": [
                 "wayland-devel",
@@ -192,6 +194,25 @@ class LinuxConfigurator(Configurator):
             typer.echo(
                 "Please install them manually before building, exit now if some of them are missing"
             )
+
+    def _validate_uv(self) -> None:
+        proceed = False
+        try:
+            subprocess.check_output(["uv", "--version"])
+            typer.echo("UV found, skipping installation")
+            proceed = False
+        except (subprocess.SubprocessError, FileNotFoundError):
+            proceed = typer.confirm(
+                "UV not found, would you like to install it?", abort=True
+            )
+
+        if proceed:
+            typer.echo("Installing UV...")
+            subprocess.run(
+                shlex.split("curl -LsSf https://astral.sh/uv/install.sh | sh"),
+                check=True,
+            )
+            typer.echo("UV installation successful")
 
     def _get_script_extension(self) -> str:
         return "sh"

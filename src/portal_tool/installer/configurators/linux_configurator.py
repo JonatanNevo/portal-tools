@@ -56,8 +56,8 @@ class LinuxConfigurator(Configurator):
         )
 
     def _try_install_vcpkg_dependencies(self) -> None:
-        typer.echo("Installing vcpkg dependencies... (curl, zip, unzip, tar)")
-        self._install_package(["curl", "zip", "unzip", "tar"])
+        typer.echo("Installing vcpkg dependencies... (curl, zip, unzip, tar, git)")
+        self._install_package(["curl", "zip", "unzip", "tar", "git"])
 
     def _install_package(self, packages: list[str]) -> None:
         if self.distro == LinuxDistro.Debian:
@@ -194,25 +194,6 @@ class LinuxConfigurator(Configurator):
             typer.echo(
                 "Please install them manually before building, exit now if some of them are missing"
             )
-
-    def _validate_uv(self) -> None:
-        proceed = False
-        try:
-            subprocess.check_output(["uv", "--version"])
-            typer.echo("UV found, skipping installation")
-            proceed = False
-        except (subprocess.SubprocessError, FileNotFoundError):
-            proceed = typer.confirm(
-                "UV not found, would you like to install it?", abort=True
-            )
-
-        if proceed:
-            typer.echo("Installing UV...")
-            subprocess.run(
-                shlex.split("curl -LsSf https://astral.sh/uv/install.sh | sh"),
-                check=True,
-            )
-            typer.echo("UV installation successful")
 
     def _get_script_extension(self) -> str:
         return "sh"

@@ -1,6 +1,7 @@
 import logging
 import pathlib
 from typing import Annotated
+from importlib.metadata import version as meta_version
 
 import appdirs
 import typer
@@ -18,6 +19,12 @@ from portal_tool.vcpkg_port import (
 
 global_working_directory = pathlib.Path.cwd()
 framework: PortalFramework
+
+
+def version_callback(value: bool):
+    if value:
+        typer.echo(f"Portal Tool version: {meta_version('portal_tool')}")
+        raise typer.Exit()
 
 
 class Settings(BaseSettings):
@@ -134,7 +141,18 @@ def init(
 
 
 @app.callback()
-def main():
+def main(
+    version: Annotated[
+        bool | None,
+        typer.Option(
+            "--version",
+            "-v",
+            callback=version_callback,
+            is_eager=True,
+            help="Show the version and exit.",
+        ),
+    ] = None,
+):
     logging.basicConfig(level=logging.INFO)
 
 

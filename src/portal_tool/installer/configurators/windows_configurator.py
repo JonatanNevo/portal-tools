@@ -94,32 +94,6 @@ class WindowsConfigurator(Configurator):
 
         typer.echo("Compiler validation successful!")
 
-    def _validate_uv(self) -> None:
-        # Check for a valid uv version
-        proceed = False
-        try:
-            subprocess.check_output(["uv", "--version"])
-            typer.echo("UV found, skipping installation")
-            proceed = False
-        except (subprocess.SubprocessError, FileNotFoundError):
-            proceed = typer.confirm(
-                "UV not found, would you like to install it?", abort=True
-            )
-
-        if proceed:
-            typer.echo("Installing UV...")
-            subprocess.run(
-                [
-                    "powershell",
-                    "-ExecutionPolicy",
-                    "ByPass",
-                    "-c",
-                    "irm https://astral.sh/uv/install.ps1 | iex",
-                ],
-                check=True,
-            )
-            typer.echo("UV installation successful")
-
     def _get_script_extension(self) -> str:
         return "bat"
 

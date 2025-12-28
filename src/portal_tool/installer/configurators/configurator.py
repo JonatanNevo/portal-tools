@@ -2,11 +2,21 @@ import abc
 import os
 
 import pathlib
+import re
 import shlex
 import shutil
 import subprocess
 
+from dataclasses import dataclass
+
 import typer
+
+
+@dataclass(frozen=True)
+class CompilerDetails:
+    name: str
+    c_compiler: str
+    cpp_compiler: str
 
 
 class Configurator(metaclass=abc.ABCMeta):
@@ -26,7 +36,7 @@ class Configurator(metaclass=abc.ABCMeta):
             if (
                 installed_vcpkg.exists()
                 and (
-                    installed_vcpkg / f"vcpkg{self._get_executable_extension()}"
+                    installed_vcpkg / f"vcpkg{self.get_executable_extension()}"
                 ).exists()
             ):
                 return installed_vcpkg, False
@@ -34,7 +44,8 @@ class Configurator(metaclass=abc.ABCMeta):
 
     def configure_build_environment(self) -> None:
         typer.echo("Configuring build environment...")
-        self._validate_compilers()
+        self._validate_git()
+        self.validate_compilers()
         self._validate_cmake()
         self._validate_dependencies()
 
@@ -67,13 +78,35 @@ class Configurator(metaclass=abc.ABCMeta):
         typer.echo("Bootstrap vcpkg...")
         subprocess.check_output(
             shlex.split(
-                f"{installation_directory}/bootstrap-vcpkg.{self._get_script_extension()}"
+                f"{(installation_directory / f'bootstrap-vcpkg.{self.get_script_extension()}').as_posix()}"
             )
         )
         typer.echo(f"Vcpkg installed successfully to: {installation_directory}")
 
+    def _validate_git(self) -> None:
+        try:
+            subprocess.check_output(shlex.split("git --version"))
+        except subprocess.CalledProcessError:
+            raise typer.Abort("Git is not installed. Please install Git and try again.")
+
     def _validate_cmake(self) -> None:
-        pass
+        try:
+            output = subprocess.check_output(shlex.split("cmake --version"))
+            version_match = re.match(r"cmake version (\d+\.\d+\.\d+)", output.decode())
+            if not version_match:
+                raise typer.Abort(
+                    "CMake is not installed, Please install CMake and try again."
+                )
+
+            version = tuple(map(int, version_match.group(1).split(".")))
+            if version < (3, 30, 0):
+                raise typer.Abort(
+                    "CMake version must be at least 3.30.0, Please install CMake and try again."
+                )
+        except subprocess.CalledProcessError:
+            raise typer.Abort(
+                "CMake is not installed, Please install CMake and try again."
+            )
 
     @abc.abstractmethod
     def _validate_dependencies(self) -> None:
@@ -84,11 +117,11 @@ class Configurator(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def _get_script_extension(self) -> str:
+    def get_script_extension(self) -> str:
         pass
 
     @abc.abstractmethod
-    def _get_executable_extension(self) -> str:
+    def get_executable_extension(self) -> str:
         pass
 
     @abc.abstractmethod
@@ -96,5 +129,5 @@ class Configurator(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def _validate_compilers(self) -> None:
+    def validate_compilers(self) -> list[CompilerDetails]:
         pass

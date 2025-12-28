@@ -7,7 +7,10 @@ import subprocess
 
 import typer
 
-from portal_tool.installer.configurators.configurator import Configurator
+from portal_tool.installer.configurators.configurator import (
+    Configurator,
+    CompilerDetails,
+)
 
 
 class LinuxDistro(enum.Enum):
@@ -73,11 +76,13 @@ class LinuxConfigurator(Configurator):
         else:
             raise typer.Abort(f"Unsupported Linux distribution: {self.distro}")
 
-    def _validate_compilers(self) -> None:
+    def validate_compilers(self) -> list[CompilerDetails]:
         typer.echo("Validating compilers...")
 
         clang_valid = False
         gcc_valid = False
+
+        found_compilers = []
 
         # Check for Clang 19+
         try:
@@ -109,49 +114,56 @@ class LinuxConfigurator(Configurator):
                         typer.echo(
                             f"Clang {major}.{match.group(2)} found, but version 19+ is required"
                         )
+
+            found_compilers.append(
+                CompilerDetails(
+                    name="clang", c_compiler="clang", cpp_compiler="clang++"
+                )
+            )
         except (subprocess.SubprocessError, FileNotFoundError):
             typer.echo("Clang not found")
 
-        # Check for gcc 15+
-        try:
-            result = subprocess.run(
-                ["gcc", "--version"], capture_output=True, text=True, timeout=5
-            )
-            if result.returncode == 0:
-                # Parse version from output like "gcc (GCC) X.Y.Z" or "gcc version X.Y.Z"
-                match = re.search(r"gcc.*?(\d+)\.(\d+)", result.stdout, re.IGNORECASE)
-                if match:
-                    major = int(match.group(1))
-                    if major >= 15:
-                        # Try to get installation path
-                        path_result = subprocess.run(
-                            ["which", "gcc"], capture_output=True, text=True, timeout=5
-                        )
-                        install_path = (
-                            path_result.stdout.strip()
-                            if path_result.returncode == 0
-                            else "unknown"
-                        )
-                        typer.echo(
-                            f"gcc {major}.{match.group(2)} found ({install_path})"
-                        )
-                        gcc_valid = True
-                    else:
-                        typer.echo(
-                            f"gcc {major}.{match.group(2)} found, but version 15+ is required"
-                        )
-        except (subprocess.SubprocessError, FileNotFoundError):
-            typer.echo("gcc not found")
+        # # Check for gcc 15+
+        # try:
+        #     result = subprocess.run(
+        #         ["gcc", "--version"], capture_output=True, text=True, timeout=5
+        #     )
+        #     if result.returncode == 0:
+        #         # Parse version from output like "gcc (GCC) X.Y.Z" or "gcc version X.Y.Z"
+        #         match = re.search(r"gcc.*?(\d+)\.(\d+)", result.stdout, re.IGNORECASE)
+        #         if match:
+        #             major = int(match.group(1))
+        #             if major >= 15:
+        #                 # Try to get installation path
+        #                 path_result = subprocess.run(
+        #                     ["which", "gcc"], capture_output=True, text=True, timeout=5
+        #                 )
+        #                 install_path = (
+        #                     path_result.stdout.strip()
+        #                     if path_result.returncode == 0
+        #                     else "unknown"
+        #                 )
+        #                 typer.echo(
+        #                     f"gcc {major}.{match.group(2)} found ({install_path})"
+        #                 )
+        #                 gcc_valid = True
+        #             else:
+        #                 typer.echo(
+        #                     f"gcc {major}.{match.group(2)} found, but version 15+ is required"
+        #                 )
+        # except (subprocess.SubprocessError, FileNotFoundError):
+        #     typer.echo("gcc not found")
 
         # Require at least one valid compiler
         if not clang_valid and not gcc_valid:
             typer.echo("\nNo valid compiler found!")
             typer.echo("Please install at least one of the following:")
             typer.echo("  - Clang 19 or later")
-            typer.echo("  - gcc 15 or later")
+            # typer.echo("  - gcc 15 or later")
             raise typer.Abort("Compiler validation failed")
 
         typer.echo("Compiler validation successful!")
+        return found_compilers
 
     def _validate_dependencies(self) -> None:
         dependency_map = {
@@ -195,8 +207,8 @@ class LinuxConfigurator(Configurator):
                 "Please install them manually before building, exit now if some of them are missing"
             )
 
-    def _get_script_extension(self) -> str:
+    def get_script_extension(self) -> str:
         return "sh"
 
-    def _get_executable_extension(self) -> str:
+    def get_executable_extension(self) -> str:
         return ""

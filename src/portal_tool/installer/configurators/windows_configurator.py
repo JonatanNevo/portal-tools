@@ -7,7 +7,10 @@ import pathlib
 
 import typer
 
-from portal_tool.installer.configurators.configurator import Configurator
+from portal_tool.installer.configurators.configurator import (
+    Configurator,
+    CompilerDetails,
+)
 
 
 class WindowsConfigurator(Configurator):
@@ -20,11 +23,13 @@ class WindowsConfigurator(Configurator):
     def _install_package(self, packages: list[str]) -> None:
         raise NotImplementedError
 
-    def _validate_compilers(self) -> None:
+    def validate_compilers(self) -> list[CompilerDetails]:
         typer.echo("Validating compilers...")
 
         clang_valid = False
         msvc_valid = False
+
+        found_compilers = []
 
         try:
             result = subprocess.run(
@@ -43,6 +48,11 @@ class WindowsConfigurator(Configurator):
                         )
                         typer.echo(f"Clang {major}.{match.group(2)} found{path_info}")
                         clang_valid = True
+                        found_compilers.append(
+                            CompilerDetails(
+                                name="clang", c_compiler="clang", cpp_compiler="clang++"
+                            )
+                        )
                     else:
                         typer.echo(
                             f"Clang {major}.{match.group(2)} found, but version 19+ is required"
@@ -76,6 +86,9 @@ class WindowsConfigurator(Configurator):
                     )
                     typer.echo(f"MSVC {version_str} found{path_info}")
                     msvc_valid = True
+                    found_compilers.append(
+                        CompilerDetails(name="msvc", c_compiler="cl", cpp_compiler="cl")
+                    )
                 else:
                     typer.echo(f"MSVC {version_str} found, but version 17+ is required")
         except (subprocess.SubprocessError, FileNotFoundError):
@@ -93,11 +106,12 @@ class WindowsConfigurator(Configurator):
             raise typer.Abort("Compiler validation failed")
 
         typer.echo("Compiler validation successful!")
+        return found_compilers
 
-    def _get_script_extension(self) -> str:
+    def get_script_extension(self) -> str:
         return "bat"
 
-    def _get_executable_extension(self) -> str:
+    def get_executable_extension(self) -> str:
         return ".exe"
 
     def _validate_dependencies(self) -> None:

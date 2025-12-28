@@ -1,6 +1,6 @@
 [project]
 name = "portal_tool"
-version = "0.0.20.dev2"
+version = "0.0.21"
 description = "Assortment of tools for the Portal project"
 authors = [{ name = "Jonatan Nevo", email = "jonatannevo-git@proton.me" }]
 requires-python = ">=3.12,<3.15"
@@ -9,6 +9,7 @@ license-files = ["LICENSE"]
 homepage = "https://github.com/JonatanNevo/portal-tools"
 dependencies = [
     "appdirs>=1.4.4",
+    "cookiecutter>=2.6.0",
     "jinja2>=3.1.6,<4",
     "pathlib>=1.0.1",
     "pydantic>=2.11.4,<3",
@@ -40,7 +41,7 @@ lint = [
 include = ["portal_tool"]
 
 [tool.hatch.build.targets.sdist.force-include]
-"portal_tool/templates/*.j2" = "portal_tool/templates/*.j2"
+"portal_tool/templates/*" = "portal_tool/templates/*"
 
 [tool.hatch.build.targets.wheel]
 include = ["portal_tool"]

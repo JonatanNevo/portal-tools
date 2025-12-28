@@ -253,7 +253,8 @@ class RepoMaker:
                         "llvm-adt",
                     ],
                 }
-            ]
+            ],
+            "overlay-triplets": ["overlay-triplets"],
         }
 
         (self.project_path / "vcpkg-configuration.json").write_text(

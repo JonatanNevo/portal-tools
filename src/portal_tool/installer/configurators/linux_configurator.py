@@ -64,14 +64,17 @@ class LinuxConfigurator(Configurator):
 
     def _install_package(self, packages: list[str]) -> None:
         if self.distro == LinuxDistro.Debian:
-            subprocess.check_output(
-                shlex.split(f"sudo apt-get install -y {' '.join(packages)}")
+            subprocess.run(
+                shlex.split(f"sudo apt-get install -y {' '.join(packages)}"),
+                check=True,
             )
         elif self.distro == LinuxDistro.Alpine:
-            subprocess.check_output(shlex.split(f"sudo apk add {' '.join(packages)}"))
+            subprocess.run(
+                shlex.split(f"sudo apk add {' '.join(packages)}"), check=True
+            )
         elif self.distro == LinuxDistro.Fedora:
-            subprocess.check_output(
-                shlex.split(f"sudo dnf install {' '.join(packages)}")
+            subprocess.run(
+                shlex.split(f"sudo dnf install {' '.join(packages)}"), check=True
             )
         else:
             raise typer.Abort(f"Unsupported Linux distribution: {self.distro}")
@@ -124,42 +127,47 @@ class LinuxConfigurator(Configurator):
             typer.echo("Clang not found")
 
         # # Check for gcc 15+
-        # try:
-        #     result = subprocess.run(
-        #         ["gcc", "--version"], capture_output=True, text=True, timeout=5
-        #     )
-        #     if result.returncode == 0:
-        #         # Parse version from output like "gcc (GCC) X.Y.Z" or "gcc version X.Y.Z"
-        #         match = re.search(r"gcc.*?(\d+)\.(\d+)", result.stdout, re.IGNORECASE)
-        #         if match:
-        #             major = int(match.group(1))
-        #             if major >= 15:
-        #                 # Try to get installation path
-        #                 path_result = subprocess.run(
-        #                     ["which", "gcc"], capture_output=True, text=True, timeout=5
-        #                 )
-        #                 install_path = (
-        #                     path_result.stdout.strip()
-        #                     if path_result.returncode == 0
-        #                     else "unknown"
-        #                 )
-        #                 typer.echo(
-        #                     f"gcc {major}.{match.group(2)} found ({install_path})"
-        #                 )
-        #                 gcc_valid = True
-        #             else:
-        #                 typer.echo(
-        #                     f"gcc {major}.{match.group(2)} found, but version 15+ is required"
-        #                 )
-        # except (subprocess.SubprocessError, FileNotFoundError):
-        #     typer.echo("gcc not found")
+        try:
+            result = subprocess.run(
+                ["gcc", "--version"], capture_output=True, text=True, timeout=5
+            )
+            if result.returncode == 0:
+                # Parse version from output like "gcc (GCC) X.Y.Z" or "gcc version X.Y.Z"
+                match = re.search(r"gcc.*?(\d+)\.(\d+)", result.stdout, re.IGNORECASE)
+                if match:
+                    major = int(match.group(1))
+                    if major >= 15:
+                        # Try to get installation path
+                        path_result = subprocess.run(
+                            ["which", "gcc"], capture_output=True, text=True, timeout=5
+                        )
+                        install_path = (
+                            path_result.stdout.strip()
+                            if path_result.returncode == 0
+                            else "unknown"
+                        )
+                        typer.echo(
+                            f"gcc {major}.{match.group(2)} found ({install_path})"
+                        )
+                        gcc_valid = True
+                        found_compilers.append(
+                            CompilerDetails(
+                                name="gcc", c_compiler="gcc", cpp_compiler="g++"
+                            )
+                        )
+                    else:
+                        typer.echo(
+                            f"gcc {major}.{match.group(2)} found, but version 15+ is required"
+                        )
+        except (subprocess.SubprocessError, FileNotFoundError):
+            typer.echo("gcc not found")
 
         # Require at least one valid compiler
         if not clang_valid and not gcc_valid:
             typer.echo("\nNo valid compiler found!")
             typer.echo("Please install at least one of the following:")
             typer.echo("  - Clang 19 or later")
-            # typer.echo("  - gcc 15 or later")
+            typer.echo("  - gcc 15 or later")
             raise typer.Abort("Compiler validation failed")
 
         typer.echo("Compiler validation successful!")
@@ -180,7 +188,7 @@ class LinuxConfigurator(Configurator):
                 "libwayland-dev",
                 "libxkbcommon-dev",
                 "wayland-protocols",
-                "python3.12-venv",
+                "python3-venv",
             ],
             "Fedora": [
                 "wayland-devel",

@@ -189,11 +189,16 @@ class LinuxConfigurator(Configurator):
                 "libxkbcommon-dev",
                 "wayland-protocols",
                 "python3-venv",
+                "xorg-dev"
             ],
             "Fedora": [
                 "wayland-devel",
                 "libxkbcommon-devel",
                 "wayland-protocols-devel",
+                "libXcursor-devel",
+                "libXi-devel",
+                "libXinerama-devel",
+                "libXrandr-devel"
             ],
             "Alpine": ["linux-headers"],
         }

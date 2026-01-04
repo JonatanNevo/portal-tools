@@ -126,7 +126,7 @@ class LinuxConfigurator(Configurator):
         except (subprocess.SubprocessError, FileNotFoundError):
             typer.echo("Clang not found")
 
-        # # Check for gcc 15+
+        # # Check for gcc 14+
         try:
             result = subprocess.run(
                 ["gcc", "--version"], capture_output=True, text=True, timeout=5
@@ -136,7 +136,7 @@ class LinuxConfigurator(Configurator):
                 match = re.search(r"gcc.*?(\d+)\.(\d+)", result.stdout, re.IGNORECASE)
                 if match:
                     major = int(match.group(1))
-                    if major >= 15:
+                    if major >= 14:
                         # Try to get installation path
                         path_result = subprocess.run(
                             ["which", "gcc"], capture_output=True, text=True, timeout=5
@@ -167,7 +167,7 @@ class LinuxConfigurator(Configurator):
             typer.echo("\nNo valid compiler found!")
             typer.echo("Please install at least one of the following:")
             typer.echo("  - Clang 19 or later")
-            typer.echo("  - gcc 15 or later")
+            typer.echo("  - gcc 14 or later")
             raise typer.Abort("Compiler validation failed")
 
         typer.echo("Compiler validation successful!")

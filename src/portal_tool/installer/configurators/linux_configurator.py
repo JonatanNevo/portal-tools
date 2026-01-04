@@ -87,7 +87,7 @@ class LinuxConfigurator(Configurator):
 
         found_compilers = []
 
-        # Check for Clang 19+
+        # Check for Clang 12+
         try:
             result = subprocess.run(
                 ["clang", "--version"], capture_output=True, text=True, timeout=5
@@ -96,7 +96,7 @@ class LinuxConfigurator(Configurator):
                 match = re.search(r"clang version (\d+)\.(\d+)", result.stdout)
                 if match:
                     major = int(match.group(1))
-                    if major >= 19:
+                    if major >= 20:
                         # Try to get installation path
                         path_result = subprocess.run(
                             ["which", "clang"],
@@ -182,6 +182,7 @@ class LinuxConfigurator(Configurator):
                 "automake",
                 "libtool",
                 "ninja-build",
+                "build-essential",
             ],
             "Debian": [
                 "linux-libc-dev",
@@ -189,7 +190,7 @@ class LinuxConfigurator(Configurator):
                 "libxkbcommon-dev",
                 "wayland-protocols",
                 "python3-venv",
-                "xorg-dev"
+                "xorg-dev",
             ],
             "Fedora": [
                 "wayland-devel",
@@ -198,7 +199,7 @@ class LinuxConfigurator(Configurator):
                 "libXcursor-devel",
                 "libXi-devel",
                 "libXinerama-devel",
-                "libXrandr-devel"
+                "libXrandr-devel",
             ],
             "Alpine": ["linux-headers"],
         }

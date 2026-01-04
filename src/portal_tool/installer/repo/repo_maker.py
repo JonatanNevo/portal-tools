@@ -248,7 +248,6 @@ class RepoMaker:
                         "portal-serialization",
                         "portal-engine",
                         "enchantum",
-                        "spdlog",
                         "glaze",
                         "llvm-adt",
                     ],

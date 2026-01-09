@@ -11,6 +11,12 @@ from typing import cast
 import typer
 from cookiecutter.main import cookiecutter
 
+from portal_tool.installer.repo.build_models import (
+    PackagePreset,
+    WorkflowPreset,
+    WorkflowStep,
+)
+
 from portal_tool.framework.framework_manager import FrameworkManager
 from portal_tool.installer.configurators.configurator import CompilerDetails
 from portal_tool.installer.configurator_factory import ConfiguratorFactory
@@ -53,35 +59,27 @@ class RepoMaker:
 
         use_example = typer.confirm("Would you like to use an example project?")
         if use_example:
-            self._make_example_project()
-        else:
-            self._make_empty_project()
+            available_examples = self.framework_manager.list_examples()
 
-    def _make_example_project(self):
-        available_examples = self.framework_manager.list_examples()
+            example_choices = enum.Enum(
+                "Examples", {ex: ex for ex in available_examples}
+            )
+            default_example = (
+                "engine_test"
+                if "engine_test" in available_examples
+                else available_examples[0]
+            )
 
-        example_choices = enum.Enum("Examples", {ex: ex for ex in available_examples})
-        default_example = (
-            "engine_test"
-            if "engine_test" in available_examples
-            else available_examples[0]
-        )
+            chosen_example = typer.prompt(
+                f"Please choose an example to use ({', '.join(available_examples)})",
+                type=example_choices,
+                default=default_example,
+            )
 
-        chosen_example = typer.prompt(
-            f"Please choose an example to use ({', '.join(available_examples)})",
-            type=example_choices,
-            default=default_example,
-        )
+            self.framework_manager.configure_example(
+                chosen_example.value, self.project_path
+            )
 
-        self.framework_manager.configure_example(
-            chosen_example.value, self.project_path
-        )
-
-        self._configure_git()
-        self._setup_vcpkg()
-        self._configure_build_system()
-
-    def _make_empty_project(self):
         self._configure_git()
         self._setup_vcpkg()
         self._configure_build_system()
@@ -252,6 +250,40 @@ class RepoMaker:
                 name="dist",
                 configure_preset=ninja_multi.name,
                 configuration="Release",
+            ),
+        ]
+
+        self.presets.package_presets = [
+            PackagePreset(
+                name="pack-zip",
+                configure_preset=ninja_multi.name,
+                package_directory="${sourceDir}/dist",
+                generators=["ZIP"],
+            ),
+            PackagePreset(
+                name="pack-installer",
+                configure_preset=ninja_multi.name,
+                package_directory="${sourceDir}/dist",
+                generators=["IFW"],
+            ),
+        ]
+
+        self.presets.workflow_presets = [
+            WorkflowPreset(
+                name="package-zip",
+                steps=[
+                    WorkflowStep(name=ninja_multi.name, type="configure"),
+                    WorkflowStep(name="dist", type="build"),
+                    WorkflowStep(name="pack-zip", type="package"),
+                ],
+            ),
+            WorkflowPreset(
+                name="package-installer",
+                steps=[
+                    WorkflowStep(name=ninja_multi.name, type="configure"),
+                    WorkflowStep(name="dist", type="build"),
+                    WorkflowStep(name="pack-installer", type="package"),
+                ],
             ),
         ]
 

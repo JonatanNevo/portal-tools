@@ -3,33 +3,23 @@ import pathlib
 from typing import Annotated
 from importlib.metadata import version as meta_version
 
-import appdirs
 import typer
-from pydantic_settings import BaseSettings
 
+from portal_tool.framework.framework_manager import FrameworkManager
 from portal_tool.installer.repo.repo_maker import RepoMaker
 from portal_tool.installer.installer import Installer
-from portal_tool.git_manager import GitManager
-from portal_tool.models import PortalFramework
-from portal_tool.vcpkg_port import (
-    update_registry,
-    generate_vcpkg_configuration,
-    update_vcpkg_versions,
-)
+from portal_tool.models import Configuration
+from portal_tool.registry.registry_update import RegistryManager
 
 global_working_directory = pathlib.Path.cwd()
-framework: PortalFramework
+configuration: Configuration
+framework_manager: FrameworkManager
 
 
 def version_callback(value: bool):
     if value:
         typer.echo(f"Portal Tool version: {meta_version('portal_tool')}")
         raise typer.Exit()
-
-
-class Settings(BaseSettings):
-    registry_url: str = "github.com:JonatanNevo/portal-vcpkg-registry"
-    examples_url: str = "github.com:JonatanNevo/portal-examples"
 
 
 def registry_start(
@@ -39,65 +29,27 @@ def registry_start(
             "-d", "--working-dir", help="The working directory of the project"
         ),
     ] = pathlib.Path.cwd(),
-    framework_path: Annotated[
-        pathlib.Path | None,
-        typer.Option(
-            "-f", "--framework-path", help="The path to the framework.json file"
-        ),
-    ] = None,
-    force_update_framework: Annotated[
-        bool,
-        typer.Option(
-            "-u", "--force-update-framework", help="Force update the framework"
-        ),
-    ] = False,
 ):
-    global framework
+    global framework_manager
     global global_working_directory
     global_working_directory = working_dir
 
-    user_data_path = pathlib.Path(appdirs.user_data_dir("portal-tool"))
-
-    if framework_path is not None:
-        framework = PortalFramework.model_validate_json(framework_path.read_text())
-    elif (working_dir / "framework.json").exists() and not force_update_framework:
-        framework = PortalFramework.model_validate_json(
-            (working_dir / "framework.json").read_text()
-        )
-    elif (user_data_path / "framework.json").exists() and not force_update_framework:
-        framework = PortalFramework.model_validate_json(
-            (user_data_path / "framework.json").read_text()
-        )
-    else:
-        # TODO: get from git as well?
-        raise FileNotFoundError(
-            "No framework.json found in working directory or user data directory"
-        )
-
-    GitManager().init_repo(framework)
+    framework_manager = FrameworkManager(configuration)
 
 
-def registry_end(*args, **kwargs) -> None:
-    user_data_path = pathlib.Path(appdirs.user_data_dir("portal-tool"))
-    (user_data_path / "framework.json").write_text(framework.model_dump_json(indent=4))
-
-
-registry = typer.Typer(callback=registry_start, result_callback=registry_end)
+registry = typer.Typer(callback=registry_start)
 
 
 @registry.command()
 def update() -> None:
-    update_registry(global_working_directory, framework)
+    manager = RegistryManager(global_working_directory, framework_manager)
+    manager.update()
 
 
 @registry.command()
 def update_versions() -> None:
-    update_vcpkg_versions(global_working_directory)
-
-
-@registry.command()
-def create_config() -> None:
-    generate_vcpkg_configuration(global_working_directory, framework)
+    manager = RegistryManager(global_working_directory, framework_manager)
+    manager.update_version()
 
 
 app = typer.Typer()
@@ -122,7 +74,12 @@ def install(
         ),
     ] = False,
 ) -> None:
-    installer = Installer(Settings().examples_url, Settings().registry_url, auto_yes)
+    installer = Installer(
+        configuration.registry_url_template.format(
+            repo=configuration.vcpkg_registry_repo
+        ),
+        auto_yes,
+    )
 
     if dependencies_only:
         installer.install(False, True)
@@ -152,8 +109,26 @@ def main(
             help="Show the version and exit.",
         ),
     ] = None,
+    framework_repo: Annotated[
+        str,
+        typer.Option("--framework", help="The repo of portal-framework"),
+    ] = "JonatanNevo/portal-framework",
+    working_branch: Annotated[
+        str,
+        typer.Option("--branch", help="The branch of the framework repo to work on"),
+    ] = "main",
+    registry_repo: Annotated[
+        str, typer.Option("--registry", help="The repo of the vcpkg registry")
+    ] = "JonatanNevo/portal-vcpkg-registry",
 ):
+    global configuration
     logging.basicConfig(level=logging.INFO)
+
+    configuration = Configuration(
+        repo=framework_repo,
+        repo_branch=working_branch,
+        vcpkg_registry_repo=registry_repo,
+    )
 
 
 if __name__ == "__main__":

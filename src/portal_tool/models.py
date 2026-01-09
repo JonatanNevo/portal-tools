@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings
 
 
 class GitDetails(BaseModel):
@@ -11,44 +12,24 @@ class GitDetails(BaseModel):
 
 class Dependency(BaseModel):
     name: str
-    version: str
-    features: list[str] = Field(default_factory=list)
+    version: str | None = None
+    features: list[str] | None = None
+    platform: str | None = None
 
 
 class Feature(BaseModel):
     name: str
     description: str
-    dependencies: list[str] = Field(default_factory=list)
-
-
-class PortDetails(BaseModel):
-    name: str
-    short_name: str
-    version: str
-    description: str
-    license: str = Field(default="MIT")
-    git: GitDetails = Field(default_factory=GitDetails)
-    options: list[str] = Field(default_factory=list)
     dependencies: list[Dependency] = Field(default_factory=list)
-    features: list[Feature] = Field(default_factory=list)
 
 
 class PortalModule(BaseModel):
     name: str
     short_name: str = ""
-    target_override: str | None = None
     version: str = ""
     description: str = ""
     options: list[str] = Field(default_factory=list)
     dependencies: list[Dependency] = Field(default_factory=list)
-    features: list[Feature] = Field(default_factory=list)
-
-
-class PortalFramework(BaseModel):
-    repo: str
-    repo_branch: str | None = None
-    vcpkg_registry_repo: str
-    modules: list[PortalModule] = Field(default_factory=list)
 
 
 class GitStatus(BaseModel):
@@ -61,3 +42,10 @@ class GitStatus(BaseModel):
 class LocalStatus(BaseModel):
     framework: GitStatus = Field(default_factory=GitStatus)
     registry: GitStatus = Field(default_factory=GitStatus)
+
+
+class Configuration(BaseSettings):
+    repo: str = "JonatanNevo/portal-framework"
+    repo_branch: str = "main"
+    vcpkg_registry_repo: str = "JonatanNevo/portal-vcpkg-registry"
+    registry_url_template: str = "github.com:{repo}"

@@ -11,10 +11,9 @@ import appdirs
 
 from portal_tool.models import (
     GitDetails,
-    PortalFramework,
+    Configuration,
     LocalStatus,
     GitStatus,
-    PortalModule,
 )
 from portal_tool.singleton import Singleton
 
@@ -78,18 +77,18 @@ class GitManager(metaclass=Singleton):
             status.model_dump_json(indent=4, exclude_none=True, exclude_defaults=True)
         )
 
-    def init_repo(self, framework: PortalFramework) -> None:
+    def init_repo(self, configuration: Configuration) -> None:
         if (
-            framework.repo != self.framework_repo
-            or framework.repo_branch != self.branch
+            configuration.repo != self.framework_repo
+            or configuration.repo_branch != self.branch
         ):
-            self.framework_repo = framework.repo
-            if framework.repo_branch:
-                self.branch = framework.repo_branch
+            self.framework_repo = configuration.repo
+            if configuration.repo_branch:
+                self.branch = configuration.repo_branch
             self.dirty = True
 
-        if framework.vcpkg_registry_repo != self.registry_repo:
-            self.registry_repo = framework.vcpkg_registry_repo
+        if configuration.vcpkg_registry_repo != self.registry_repo:
+            self.registry_repo = configuration.vcpkg_registry_repo
             self.dirty = True
 
         framework_repo_url = f"https://github.com/{self.framework_repo}.git"
@@ -196,12 +195,3 @@ class GitManager(metaclass=Singleton):
                 return version_file.read().strip()
         logging.warning(f"Could not find version file at {version_file_path}")
         return "0.0.0"
-
-    def validate_modules_versions(self, modules: list[PortalModule]) -> None:
-        for module in modules:
-            module_version = self.get_version(module.short_name)
-            if module_version != module.version:
-                logging.warning(
-                    f"Module {module.name} has version {module_version} but expected {module.version}"
-                )
-                module.version = module_version

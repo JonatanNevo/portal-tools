@@ -79,18 +79,14 @@ class RegistryManager:
         vcpkg_file = port_path / "vcpkg.json"
         usage_file = port_path / "usage"
 
-        old_port_file_data = port_file.read_text() if port_file.exists() else ""
-        changed_detected = old_port_file_data != cmake
         port_file.write_text(cmake)
-        self._make_vcpkg_json(changed_detected, module, vcpkg_file)
+        self._make_vcpkg_json(module, vcpkg_file)
         usage_file.write_text(usage)
 
         subprocess.check_output(shlex.split(f'vcpkg format-manifest "{vcpkg_file}"'))
 
     @staticmethod
-    def _make_vcpkg_json(
-        changes: bool, module: PortalModule, json_path: pathlib.Path
-    ) -> None:
+    def _make_vcpkg_json(module: PortalModule, json_path: pathlib.Path) -> None:
         old_vcpkg_json = json.loads(
             json_path.read_text() if json_path.exists() else "{}"
         )
@@ -135,7 +131,7 @@ class RegistryManager:
         #         )
         #     json_features[feature.name] = json_feature
 
-        if changes and json_details["version"] == old_vcpkg_json.get("version"):
+        if json_details["version"] == old_vcpkg_json.get("version"):
             json_details["port-version"] = old_vcpkg_json.get("port-version", 0) + 1
 
         formatted_json = filter_nones(json_details)

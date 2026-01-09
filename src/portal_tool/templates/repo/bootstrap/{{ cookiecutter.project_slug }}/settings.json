@@ -1,6 +1,4 @@
 {
-    "name": "{{ cookiecutter.project_name }}",
-
     "application": {
         "fullscreen": false,
         "scheduler-threads": 0,

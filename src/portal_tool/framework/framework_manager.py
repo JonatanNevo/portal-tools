@@ -1,8 +1,11 @@
 import json
 
+import pathlib
+import shutil
+
 import typer
 
-from portal_tool.git_manager import GitManager
+from portal_tool.framework.git_manager import GitManager
 from portal_tool.models import Configuration, PortalModule, Dependency
 
 IGNORED_FEATURES = ["dev"]
@@ -77,6 +80,34 @@ class FrameworkManager:
 
         # TODO: validate portal dependencies version based on configures module versions
         return output
+
+    def get_engine_version(self) -> str:
+        return self.git_manager.get_version("engine")
+
+    def list_examples(self) -> list[str]:
+        examples_folder = self.framework_path / "examples"
+        if not examples_folder.exists():
+            return []
+
+        return [
+            example.name for example in examples_folder.iterdir() if example.is_dir()
+        ]
+
+    def configure_example(self, example_name: str, output_folder: pathlib.Path) -> None:
+        example_folder = self.framework_path / "examples" / example_name
+        if not example_folder.exists():
+            typer.Abort(f"Example {example_name} not found.")
+
+        output_folder.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(example_folder, output_folder, dirs_exist_ok=True)
+
+        out_cmake = output_folder / "CMakeLists.txt"
+        out_cmake_data = out_cmake.read_text()
+        out_cmake_data = out_cmake_data.replace(
+            "#find_package(portal-engine CONFIG REQUIRED)",
+            "find_package(portal-engine CONFIG REQUIRED)",
+        )
+        out_cmake.write_text(out_cmake_data)
 
     def get_vcpkg_configuration(self) -> str:
         return (self.framework_path / "vcpkg-configuration.json").read_text()

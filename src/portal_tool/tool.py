@@ -30,11 +30,8 @@ def registry_start(
         ),
     ] = pathlib.Path.cwd(),
 ):
-    global framework_manager
     global global_working_directory
     global_working_directory = working_dir
-
-    framework_manager = FrameworkManager(configuration)
 
 
 registry = typer.Typer(callback=registry_start)
@@ -94,7 +91,7 @@ def init(
         typer.Option("-d", "--dir", help="The directory to initialize the project in"),
     ] = pathlib.Path.cwd(),
 ) -> None:
-    RepoMaker(directory)
+    RepoMaker(directory, framework_manager)
 
 
 @app.callback()
@@ -122,6 +119,7 @@ def main(
     ] = "JonatanNevo/portal-vcpkg-registry",
 ):
     global configuration
+    global framework_manager
     logging.basicConfig(level=logging.INFO)
 
     configuration = Configuration(
@@ -129,6 +127,8 @@ def main(
         repo_branch=working_branch,
         vcpkg_registry_repo=registry_repo,
     )
+
+    framework_manager = FrameworkManager(configuration)
 
 
 if __name__ == "__main__":

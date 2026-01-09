@@ -5,7 +5,7 @@
   "dependencies": [
     {
       "name": "portal-engine",
-      "version>=": "0.1.9"
+      "version>=": "{{ cookiecutter.engine_version }}"
     }
   ]
 }

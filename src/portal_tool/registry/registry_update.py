@@ -7,7 +7,7 @@ import subprocess
 import jinja2
 
 from portal_tool.framework.framework_manager import FrameworkManager
-from portal_tool.git_manager import GitManager
+from portal_tool.framework.git_manager import GitManager
 from portal_tool.models import GitDetails, PortalModule
 
 

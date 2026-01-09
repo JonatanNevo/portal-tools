@@ -1,10 +1,8 @@
 import enum
 import importlib
 import importlib.util
-import json
 import os
 import pathlib
-import platform
 import shlex
 import subprocess
 import zipimport
@@ -13,6 +11,7 @@ from typing import cast
 import typer
 from cookiecutter.main import cookiecutter
 
+from portal_tool.framework.framework_manager import FrameworkManager
 from portal_tool.installer.configurators.configurator import CompilerDetails
 from portal_tool.installer.configurator_factory import ConfiguratorFactory
 from portal_tool.installer.repo.build_models import (
@@ -32,9 +31,10 @@ class RepoMaker:
     - cmake configuration
     """
 
-    def __init__(self, path: pathlib.Path):
+    def __init__(self, path: pathlib.Path, framework_manager: FrameworkManager):
         self.configurator = ConfiguratorFactory().create(False)
         self.presets = CMakePresets()
+        self.framework_manager = framework_manager
 
         self.name = typer.prompt("Project Name")
         self.base_path = pathlib.Path(
@@ -50,6 +50,38 @@ class RepoMaker:
         self.vcpkg_exec_location = pathlib.Path("")
 
         self._create_repo_from_template()
+
+        use_example = typer.confirm("Would you like to use an example project?")
+        if use_example:
+            self._make_example_project()
+        else:
+            self._make_empty_project()
+
+    def _make_example_project(self):
+        available_examples = self.framework_manager.list_examples()
+
+        example_choices = enum.Enum("Examples", {ex: ex for ex in available_examples})
+        default_example = (
+            "engine_test"
+            if "engine_test" in available_examples
+            else available_examples[0]
+        )
+
+        chosen_example = typer.prompt(
+            f"Please choose an example to use ({', '.join(available_examples)})",
+            type=example_choices,
+            default=default_example,
+        )
+
+        self.framework_manager.configure_example(
+            chosen_example.value, self.project_path
+        )
+
+        self._configure_git()
+        self._setup_vcpkg()
+        self._configure_build_system()
+
+    def _make_empty_project(self):
         self._configure_git()
         self._setup_vcpkg()
         self._configure_build_system()
@@ -107,7 +139,10 @@ class RepoMaker:
         cookiecutter(
             self._find_pacakge_path().as_posix(),
             no_input=True,
-            extra_context={"project_name": self.name},
+            extra_context={
+                "project_name": self.name,
+                "engine_version": self.framework_manager.get_engine_version(),
+            },
             output_dir=self.base_path.as_posix(),
         )
 
@@ -202,15 +237,6 @@ class RepoMaker:
             name="ninja-multi", inherits=[base.name], generator="Ninja Multi-Config"
         )
 
-        # TODO: support gcc
-        if platform.system() == "Linux":
-            ninja_multi.environment = {
-                "CC": "clang",
-                "CXX": "clang++",
-                "VCPKG_KEEP_ENV_VARS": "CC;CXX",
-                **(ninja_multi.environment if ninja_multi.environment else {}),
-            }
-
         self.presets.configure_presets = [base, ninja_multi]
 
         self.presets.build_presets = [
@@ -223,7 +249,7 @@ class RepoMaker:
                 configuration="RelWithDebInfo",
             ),
             BuildPreset(
-                name="release",
+                name="dist",
                 configure_preset=ninja_multi.name,
                 configuration="Release",
             ),
@@ -233,33 +259,12 @@ class RepoMaker:
             self.presets.model_dump_json(indent=4, exclude_none=True, by_alias=True)
         )
 
-        vcpkg_config = {
-            "registries": [
-                {
-                    "kind": "git",
-                    "repository": "https://github.com/JonatanNevo/portal-vcpkg-registry",
-                    "reference": "main",
-                    "baseline": "07f01155c58797765efee4f55a4acaf621cee5da",
-                    "packages": [
-                        "portal-core",
-                        "portal-application",
-                        "portal-input",
-                        "portal-networking",
-                        "portal-serialization",
-                        "portal-engine",
-                        "enchantum",
-                        "glaze",
-                        "llvm-adt",
-                    ],
-                }
-            ],
-            "overlay-triplets": ["overlay-triplets"],
-        }
-
         (self.project_path / "vcpkg-configuration.json").write_text(
-            json.dumps(vcpkg_config, indent=4)
+            self.framework_manager.get_vcpkg_configuration()
         )
 
-        subprocess.check_output(
-            shlex.split(f"{self.vcpkg_exec_location.as_posix()} x-update-baseline")
+        output = subprocess.check_output(
+            shlex.split(f"{self.vcpkg_exec_location.as_posix()} x-update-baseline"),
+            cwd=self.project_path.as_posix(),
         )
+        typer.echo(output.decode())

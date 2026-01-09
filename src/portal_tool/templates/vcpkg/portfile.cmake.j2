@@ -12,6 +12,9 @@ vcpkg_cmake_configure(
         SOURCE_PATH "${SOURCE_PATH}"
         {% if module.options %}OPTIONS{% for option in module.options %}
         -D{{ option }}{% endfor %}{% endif %}
+
+        MAYBE_UNUSED_VARIABLES
+            PORTAL_BUILD_TESTS
 )
 
 vcpkg_cmake_install()

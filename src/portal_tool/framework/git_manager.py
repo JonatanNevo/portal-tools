@@ -131,6 +131,7 @@ class GitManager(metaclass=Singleton):
                 shlex.split(f'git -C "{path}" branch --show-current')
             )
             if current_ref.decode().strip() != head_ref:
+                subprocess.check_output(shlex.split(f'git -C "{path}" fetch'))
                 subprocess.check_output(
                     shlex.split(f'git -C "{path}" checkout {head_ref}')
                 )

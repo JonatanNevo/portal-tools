@@ -5,6 +5,7 @@ from importlib.metadata import version as meta_version
 
 import typer
 
+from portal_tool.runner import runner
 from portal_tool.framework.framework_manager import FrameworkManager
 from portal_tool.installer.repo.repo_maker import RepoMaker
 from portal_tool.installer.installer import Installer
@@ -51,6 +52,7 @@ def update_versions() -> None:
 
 app = typer.Typer()
 app.add_typer(registry, name="registry", help="Commands for managing the registry")
+app.add_typer(runner, name="run", help="Commands for running the project")
 
 
 @app.command()

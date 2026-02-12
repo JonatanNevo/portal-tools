@@ -231,7 +231,7 @@ class RepoMaker:
             environment={
                 "PORTAL_C_COMPILER": project_compiler.c_compiler,
                 "PORTAL_CPP_COMPILER": project_compiler.cpp_compiler,
-                "VCPKG_KEEP_ENV_VARS": "PORTAL_C_COMPILER;PORTAL_CPP_COMPILER",
+                "VCPKG_KEEP_ENV_VARS": "PORTAL_C_COMPILER;PORTAL_CPP_COMPILER;PATH",
             },
         )
 
